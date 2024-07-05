@@ -14,6 +14,7 @@
   "dependencies": {
     "@umijs/bundler-webpack": "3.5.41",
     "@umijs/mako": "^0.7.4",
+    "@umijs/preset-built-in": "^3.5.41",
     "@umijs/types": "3.x",
     "core-js": "^3.37.1",
     "get-tsconfig": "4.7.5",
