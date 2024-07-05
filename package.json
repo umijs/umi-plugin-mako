@@ -2,11 +2,28 @@
   "name": "umi-plugin-3-mako",
   "version": "0.0.1",
   "description": "",
-  "main": "index.js",
-  "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
-  },
   "keywords": [],
+  "license": "MIT",
   "author": "",
-  "license": "MIT"
+  "main": "dist/index.js",
+  "scripts": {
+    "build": "father build",
+    "format": "prettier --write .",
+    "start": "father dev"
+  },
+  "dependencies": {
+    "@umijs/bundler-webpack": "3.5.41",
+    "@umijs/mako": "^0.7.4",
+    "@umijs/types": "3.x",
+    "core-js": "^3.37.1",
+    "get-tsconfig": "4.7.5",
+    "lodash": "^4.17.21"
+  },
+  "devDependencies": {
+    "@types/lodash": "^4.17.6",
+    "father": "^4.4.4",
+    "prettier": "^2.5.1",
+    "prettier-plugin-organize-imports": "^3.2.4",
+    "prettier-plugin-packagejson": "^2.5.0"
+  }
 }
