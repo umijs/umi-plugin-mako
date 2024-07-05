@@ -1,5 +1,7 @@
 import { Bundler as WebpackBundler } from '@umijs/bundler-webpack';
+
 import fs from 'fs';
+import { createProxyMiddleware } from 'http-proxy-middleware';
 import path from 'path';
 
 require('./requireHook').init();
@@ -80,100 +82,85 @@ class Bundler extends WebpackBundler {
         });
     });
   }
+  setupDevServerOpts({ bundleConfigs }: { bundleConfigs: any }): any {
+    const config = bundleConfigs[0];
+    console.log(bundleConfigs);
+    // mako build need alias array
+    const generatorAlias = Object.keys(config.resolve.alias).map((key) => {
+      return [key, config.resolve.alias[key]];
+    });
+    // mako build need entry object
+    const generatorEntry: any = {};
+    Object.keys(config.entry).forEach((key) => {
+      generatorEntry[key] = config.entry[key][0];
+    });
+    return {
+      onListening: async ({ server, port, hostname, listeningApp }: any) => {
+        const hmrPort = port + 1;
+        // proxy ws to mako server
+        const wsProxy = createProxyMiddleware({
+          // mako server in the same host so hard code is ok
+          target: `http://${hostname}:${hmrPort}`,
+          ws: true,
+          logLevel: 'silent',
+        });
+        server.app.use('/__/hmr-ws', wsProxy);
+        // server.app._router.stack.unshift(server.app._router.stack.pop());
+        server.socketServer.on('upgrade', wsProxy.upgrade);
 
-  //   setupDevServerOpts({
-  //     bundleConfigs,
-  //     bundleImplementor = defaultWebpack,
-  //   }: {
-  //     bundleConfigs: defaultWebpack.Configuration[];
-  //     bundleImplementor?: typeof defaultWebpack;
-  //   }): IServerOpts {
-  //     const compiler = bundleImplementor.webpack(bundleConfigs);
-  //     const { ssr, devServer } = this.config;
-  //     // 这里不做 winPath 处理，是为了和下方的 path.sep 匹配上
-  //     const compilerMiddleware = webpackDevMiddleware(compiler, {
-  //       // must be /, otherwise it will exec next()
-  //       publicPath: '/',
-  //       logLevel: 'silent',
-  //       // if `ssr` set false, next() into server-side render
-  //       ...(ssr ? { index: false } : {}),
-  //       writeToDisk: devServer && devServer?.writeToDisk,
-  //       watchOptions: {
-  //         // not watch outputPath dir and node_modules
-  //         ignored: this.getIgnoredWatchRegExp(),
-  //       },
-  //     });
+        // mako dev
+        const { build } = require('@umijs/mako');
+        const makoConfig: any = {
+          mode: config.mode,
+          devtool: false,
+          autoCSSModules: true,
+          less: {},
+          resolve: { alias: generatorAlias },
+          entry: generatorEntry,
+          // always enable stats to provide json for onBuildComplete hook
+          stats: {
+            modules: false,
+          },
+          plugins: [],
+        };
+        makoConfig.hmr = {};
+        makoConfig.devServer = { port: hmrPort, host: hostname };
+        makoConfig.plugins.push({
+          name: 'mako-dev',
+          generateEnd: (args: any) => {
+            console.log('onDevCompileDone', args);
+            config.onCompileDone?.({
+              ...args,
+              stats: {
+                ...args?.stats,
+                compilation: {
+                  chunks: [{ name: 'umi', files: ['umi.js', 'umi.css'] }],
+                },
+              },
+            });
+          },
+        });
+        console.log(hostname + port);
+        const cwd = this.cwd;
+        try {
+          await build({
+            root: cwd,
+            config: makoConfig,
+            watch: true,
+          });
+        } catch (e: any) {
+          // opts.onBuildError?.(e);
+          config.onCompileFail?.(e);
 
-  //     function sendStats({
-  //       server,
-  //       sockets,
-  //       stats,
-  //     }: {
-  //       server: Server;
-  //       sockets: any;
-  //       stats: defaultWebpack.Stats.ToJsonOutput;
-  //     }) {
-  //       server.sockWrite({ sockets, type: 'hash', data: stats.hash });
-
-  //       if (stats.errors.length > 0) {
-  //         server.sockWrite({ sockets, type: 'errors', data: stats.errors });
-  //       } else if (stats.warnings.length > 0) {
-  //         server.sockWrite({ sockets, type: 'warnings', data: stats.warnings });
-  //       } else {
-  //         server.sockWrite({ sockets, type: 'ok' });
-  //       }
-  //     }
-
-  //     function getStats(stats: defaultWebpack.Stats) {
-  //       return stats.toJson({
-  //         all: false,
-  //         hash: true,
-  //         assets: true,
-  //         warnings: true,
-  //         errors: true,
-  //         errorDetails: false,
-  //       });
-  //     }
-
-  //     let _stats: defaultWebpack.Stats | null = null;
-
-  //     return {
-  //       compilerMiddleware,
-  //       onListening: ({ server }) => {
-  //         function addHooks(compiler: defaultWebpack.Compiler) {
-  //           const { compile, invalid, done } = compiler.hooks;
-  //           compile.tap('umi-dev-server', () => {
-  //             server.sockWrite({ type: 'invalid' });
-  //           });
-  //           invalid.tap('umi-dev-server', () => {
-  //             server.sockWrite({ type: 'invalid' });
-  //           });
-  //           done.tap('umi-dev-server', (stats) => {
-  //             sendStats({
-  //               server,
-  //               sockets: server.sockets,
-  //               stats: getStats(stats),
-  //             });
-  //             _stats = stats;
-  //           });
-  //         }
-  //         if (compiler.compilers) {
-  //           compiler.compilers.forEach(addHooks);
-  //         } else {
-  //           addHooks(compiler as any);
-  //         }
-  //       },
-  //       onConnection: ({ connection, server }) => {
-  //         if (_stats) {
-  //           sendStats({
-  //             server,
-  //             sockets: [connection],
-  //             stats: getStats(_stats),
-  //           });
-  //         }
-  //       },
-  //     };
-  //   }
+          console.error(e.message);
+          const err: any = new Error('Build with mako failed.');
+          err.stack = null;
+          throw err;
+        }
+      },
+      onConnection: ({ connection, server }: any) => {},
+    };
+  }
 }
 
 export { Bundler };

@@ -6,6 +6,7 @@ import { getHtmlGenerator } from '@umijs/preset-built-in/lib/plugins/commands/ht
 import { existsSync, writeFileSync } from 'fs';
 import { join } from 'path';
 // @ts-ignore
+import express from '@umijs/deps/compiled/express';
 import { OUTPUT_SERVER_FILENAME } from '@umijs/preset-built-in/lib/plugins/features/ssr/constants';
 
 export default function (api: IApi) {
@@ -28,6 +29,7 @@ export default function (api: IApi) {
     return Bundler;
   });
   api.onStart(() => {
+    process.env.HMR = 'none';
     try {
       const pkg = require(path.join(
         require.resolve('@umijs/mako'),
@@ -88,5 +90,56 @@ export default function (api: IApi) {
         writeFileSync(outputHtml, content, 'utf-8');
       }
     }
+  });
+  api.addBeforeMiddlewares(() => {
+    const outputPath = path.resolve(
+      api.paths.cwd!,
+      api.config.outputPath || 'dist',
+    );
+    // cors
+    // compression
+    // history fallback
+    // serve dist files
+    return [
+      require('cors')({
+        origin: true,
+        methods: ['GET', 'HEAD', 'PUT', 'POST', 'PATCH', 'DELETE', 'OPTIONS'],
+        credentials: true,
+      }),
+      require('compression')(),
+      require('connect-history-api-fallback')({
+        index: '/',
+      }),
+      express.static(outputPath),
+    ];
+  });
+  api.modifyBundleConfig((bundleConfig: any, { bundler: { id }, type }) => {
+    if (id === 'mako') {
+      bundleConfig.onCompileDone = ({ isFirstCompile, stats }: any) => {
+        if (isFirstCompile) {
+          api.service.emit('firstDevCompileDone');
+        }
+        api
+          .applyPlugins({
+            key: 'onDevCompileDone',
+            type: api.ApplyPluginsType.event,
+            args: {
+              isFirstCompile,
+              type,
+              stats,
+            },
+          })
+          .catch((e) => {
+            console.error(e.stack);
+          });
+      };
+      bundleConfig.onCompileFail = ({ stats }: any) => {
+        if (stats.hasErrors()) {
+          console.error(stats.toString('errors-only'));
+        }
+        // printHelp.feedback();
+      };
+    }
+    return bundleConfig;
   });
 }
