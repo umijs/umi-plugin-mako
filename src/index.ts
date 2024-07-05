@@ -2,11 +2,11 @@ import { IApi } from '@umijs/types';
 import path from 'path';
 import { Bundler } from './bundler-mako';
 // @ts-ignore
+import express from '@umijs/deps/compiled/express';
 import { getHtmlGenerator } from '@umijs/preset-built-in/lib/plugins/commands/htmlUtils';
 import { existsSync, writeFileSync } from 'fs';
 import { join } from 'path';
 // @ts-ignore
-import express from '@umijs/deps/compiled/express';
 import { OUTPUT_SERVER_FILENAME } from '@umijs/preset-built-in/lib/plugins/features/ssr/constants';
 
 export default function (api: IApi) {

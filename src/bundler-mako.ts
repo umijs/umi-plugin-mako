@@ -84,7 +84,7 @@ class Bundler extends WebpackBundler {
   }
   setupDevServerOpts({ bundleConfigs }: { bundleConfigs: any }): any {
     const config = bundleConfigs[0];
-    console.log(bundleConfigs);
+    // console.log(bundleConfigs);
     // mako build need alias array
     const generatorAlias = Object.keys(config.resolve.alias).map((key) => {
       return [key, config.resolve.alias[key]];
@@ -128,7 +128,7 @@ class Bundler extends WebpackBundler {
         makoConfig.plugins.push({
           name: 'mako-dev',
           generateEnd: (args: any) => {
-            console.log('onDevCompileDone', args);
+            // console.log('onDevCompileDone', args);
             config.onCompileDone?.({
               ...args,
               stats: {
@@ -140,7 +140,7 @@ class Bundler extends WebpackBundler {
             });
           },
         });
-        console.log(hostname + port);
+        console.log(`http://localhost:${port}`);
         const cwd = this.cwd;
         try {
           await build({

@@ -2,10 +2,18 @@
   "name": "umi-plugin-3-mako",
   "version": "0.0.1",
   "description": "",
-  "keywords": [],
+  "keywords": [
+    "mako",
+    "umi@3",
+    "umijs"
+  ],
   "license": "MIT",
-  "author": "",
+  "author": "xiaohuoni",
   "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "files": [
+    "dist"
+  ],
   "scripts": {
     "build": "father build",
     "format": "prettier --write .",
