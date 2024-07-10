@@ -1,10 +1,7 @@
 import { Bundler as WebpackBundler } from '@umijs/bundler-webpack';
-
 import fs from 'fs';
 import { createProxyMiddleware } from 'http-proxy-middleware';
 import path from 'path';
-
-require('./requireHook').init();
 
 class Bundler extends WebpackBundler {
   static id = 'mako';
@@ -128,18 +125,21 @@ class Bundler extends WebpackBundler {
         makoConfig.plugins.push({
           name: 'mako-dev',
           generateEnd: (args: any) => {
-            // console.log('onDevCompileDone', args);
+            // onDevCompileDone { startTime: 1720582011441, endTime: 1720582011804 }
+            // console.log('onDevCompileDone', args?.stats);
             config.onCompileDone?.({
               ...args,
               stats: {
                 ...args?.stats,
                 compilation: {
+                  // FIXME: 现在 args stats，chunks 现在是写死的
                   chunks: [{ name: 'umi', files: ['umi.js', 'umi.css'] }],
                 },
               },
             });
           },
         });
+        // TODO: print banner
         console.log(`http://localhost:${port}`);
         const cwd = this.cwd;
         try {

@@ -3,6 +3,7 @@ import path from 'path';
 import { Bundler } from './bundler-mako';
 // @ts-ignore
 import express from '@umijs/deps/compiled/express';
+// @ts-ignore
 import { getHtmlGenerator } from '@umijs/preset-built-in/lib/plugins/commands/htmlUtils';
 import { existsSync, writeFileSync } from 'fs';
 import { join } from 'path';
