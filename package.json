@@ -1,13 +1,13 @@
 {
   "name": "umi-plugin-mako",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "description": "",
   "keywords": [
     "mako",
     "umi@3",
     "umijs"
   ],
-  "homepage": "https://github.com/xiaohuoni/umi-plugin-mako",
+  "homepage": "https://github.com/umijs/umi-plugin-mako",
   "license": "MIT",
   "author": "xiaohuoni",
   "main": "dist/index.js",

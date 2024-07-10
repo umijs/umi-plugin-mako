@@ -58,3 +58,24 @@ Building with mako for development...
 
 MIT
 
+## Example
+
+Please refer to [umi-antd-pro](https://github.com/alitajs/umi-antd-pro)'s [commit](https://github.com/alitajs/umi-antd-pro/commit/03103c82a78acbb1e27db46a26cbff2d77ff3d09) for usage cases
+ 
+webpack
+
+```bash
+Theme generated successfully
+ DONE  Compiled successfully in 38919ms              15:00:51
+
+✨  Done in 41.77s.
+```
+
+mako 
+
+```bash
+
+✓ Built in 4807ms
+mako build complete
+✨  Done in 7.82s.
+```
