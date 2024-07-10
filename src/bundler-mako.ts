@@ -50,6 +50,7 @@ class Bundler extends WebpackBundler {
           stats: {
             modules: false,
           },
+          ...(this.config?.mako || {}),
         },
         watch: false,
       })
@@ -119,6 +120,7 @@ class Bundler extends WebpackBundler {
             modules: false,
           },
           plugins: [],
+          ...(this.config?.mako || {}),
         };
         makoConfig.hmr = {};
         makoConfig.devServer = { port: hmrPort, host: hostname };

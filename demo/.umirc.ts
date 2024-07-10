@@ -8,5 +8,7 @@ export default defineConfig({
   fastRefresh: {},
   mfsu: false,
   plugins: ['../dist/index'],
-  mako: {},
+  mako: {
+    px2rem: {},
+  },
 });
