@@ -14,7 +14,10 @@ Enable by config.
 import { defineConfig } from 'umi';
 
 export default defineConfig({
-  mako: {},
+  mako: {
+    // mako.config.json
+    // mako config
+  },
 });
 ```
 

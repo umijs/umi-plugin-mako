@@ -7,7 +7,7 @@
     "umi@3",
     "umijs"
   ],
-  "homepage": "https://github.com/xiaohuoni/umi-plugin-3-mako",
+  "homepage": "https://github.com/xiaohuoni/umi-plugin-mako",
   "license": "MIT",
   "author": "xiaohuoni",
   "main": "dist/index.js",
