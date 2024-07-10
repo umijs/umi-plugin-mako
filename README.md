@@ -3,7 +3,7 @@
 ## 安装
 
 ```
-npm i umi-plugin-3-mako
+npm i umi-plugin-mako
 ```
 
 ## 使用
