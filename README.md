@@ -1,16 +1,16 @@
-# umi@3 plugin for mako
+# Mako Plugin for Umi@3
 
-## 安装
+## Install
 
+```bash
+$ npm i umi-plugin-mako -D
 ```
-npm i umi-plugin-mako
-```
 
-## 使用
+## Usage
 
-配置开启
+Enable by config.
 
-```
+```ts
 import { defineConfig } from 'umi';
 
 export default defineConfig({
@@ -18,10 +18,10 @@ export default defineConfig({
 });
 ```
 
-### build
+### Build
 
 ```bash
-> umi build
+$ umi build
 
 INFO Using mako@0.7.4
 Building with mako for production...
@@ -39,10 +39,10 @@ Complete!
 mako build complete
 ```
 
-### dev
+### Dev
 
 ```bash
-> umi dev
+$ umi dev
 
 INFO Using mako@0.7.4
 Starting the development server...
@@ -50,3 +50,8 @@ http://localhost:8000
 Building with mako for development...
 ✓ Built in 352ms
 ```
+
+## LICENSE
+
+MIT
+
