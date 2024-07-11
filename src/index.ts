@@ -5,10 +5,8 @@ import { Bundler } from './bundler-mako';
 import express from '@umijs/deps/compiled/express';
 // @ts-ignore
 import { getHtmlGenerator } from '@umijs/preset-built-in/lib/plugins/commands/htmlUtils';
-import { existsSync, writeFileSync } from 'fs';
+import { writeFileSync } from 'fs';
 import { join } from 'path';
-// @ts-ignore
-import { OUTPUT_SERVER_FILENAME } from '@umijs/preset-built-in/lib/plugins/features/ssr/constants';
 
 export default function (api: IApi) {
   api.describe({
@@ -45,27 +43,11 @@ export default function (api: IApi) {
       console.error(e);
     }
   });
-  // maybe hack but useful
-  function ensureServerFileExisted() {
-    return new Promise((resolve) => {
-      const interval = setInterval(() => {
-        if (
-          existsSync(join(api.paths.absOutputPath!, OUTPUT_SERVER_FILENAME))
-        ) {
-          clearInterval(interval);
-          resolve({});
-        }
-      }, 300);
-    });
-  }
+
   api.onBuildComplete(async ({ err, stats }) => {
     console.log('mako build complete');
     if (!err) {
       const compilation = (stats as any).toJson();
-      if (api.config.ssr) {
-        // waiting umi.server.js emited
-        await ensureServerFileExisted();
-      }
       const html = getHtmlGenerator({ api });
       const routeMap = await api.applyPlugins({
         key: 'modifyExportRouteMap',
@@ -137,12 +119,7 @@ export default function (api: IApi) {
             console.error(e.stack);
           });
       };
-      bundleConfig.onCompileFail = ({ stats }: any) => {
-        if (stats.hasErrors()) {
-          console.error(stats.toString('errors-only'));
-        }
-        // printHelp.feedback();
-      };
+      bundleConfig.onCompileFail = () => {};
     }
     return bundleConfig;
   });
