@@ -71,25 +71,19 @@ class Bundler extends WebpackBundler {
         makoConfig.plugins.push({
           name: 'mako-dev',
           generateEnd: (args: any) => {
-            // const outputPath = path.resolve(
-            //   this.cwd,
-            //   this.config.outputPath || 'dist',
-            // );
-            // const statsUtil = getStats(outputPath);
-            // const compilation = statsUtil.toJson();
+            const outputPath = path.resolve(
+              this.cwd,
+              this.config.outputPath || 'dist',
+            );
+            const statsUtil = getStats(outputPath);
+            const compilation = statsUtil.toJson();
             // onDevCompileDone { startTime: 1720582011441, endTime: 1720582011804 }
             // console.log('onDevCompileDone', args);
-            // https://github.com/umijs/mako/issues/1134
             config.onCompileDone?.({
               ...args,
               stats: {
                 ...args?.stats,
-                // FIXME: 现在 mako dev 的时候缺失 css 的 chunks https://github.com/umijs/mako/issues/1134
-                // 修复后，compilation 从上面注释取得
-                compilation: {
-                  chunks: [{ name: 'umi', files: ['umi.js', 'umi.css'] }],
-                },
-                // compilation,
+                compilation,
               },
             });
             if (args.isFirstCompile) {

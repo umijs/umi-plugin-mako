@@ -42,7 +42,8 @@ export const getMakoConfig = (config: any, bundleConfig: any) => {
 
   return {
     mode: bundleConfig.mode,
-    devtool: false,
+    // FIXME: devtool 为 false 时 mako dev 的时候缺失 css 的 chunks https://github.com/umijs/mako/issues/1134
+    devtool: {},
     autoCSSModules: true,
     less: {},
     resolve: { alias: generatorAlias },
