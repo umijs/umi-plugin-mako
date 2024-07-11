@@ -1,7 +1,7 @@
 import { Bundler as WebpackBundler } from '@umijs/bundler-webpack';
-import fs from 'fs';
 import { createProxyMiddleware } from 'http-proxy-middleware';
 import path from 'path';
+import { getDevBanner, getMakoConfig, getStats } from './utils';
 
 class Bundler extends WebpackBundler {
   static id = 'mako';
@@ -27,31 +27,11 @@ class Bundler extends WebpackBundler {
         // dev 好像不走这里
       }
       const config = bundleConfigs[0];
+      const makoConfig = getMakoConfig(this.config, config);
 
-      // mako build need alias array
-      const generatorAlias = Object.keys(config.resolve.alias).map((key) => {
-        return [key, config.resolve.alias[key]];
-      });
-      // mako build need entry object
-      const generatorEntry: any = {};
-      Object.keys(config.entry).forEach((key) => {
-        generatorEntry[key] = config.entry[key][0];
-      });
       build({
         root: this.cwd,
-        config: {
-          mode: config.mode,
-          devtool: false,
-          autoCSSModules: true,
-          less: {},
-          resolve: { alias: generatorAlias },
-          entry: generatorEntry,
-          // always enable stats to provide json for onBuildComplete hook
-          stats: {
-            modules: false,
-          },
-          ...(this.config?.mako || {}),
-        },
+        config: makoConfig,
         watch: false,
       })
         .then(() => {
@@ -59,19 +39,7 @@ class Bundler extends WebpackBundler {
             this.cwd,
             this.config.outputPath || 'dist',
           );
-
-          const statsJsonPath = path.join(outputPath, 'stats.json');
-          const statsJson = JSON.parse(fs.readFileSync(statsJsonPath, 'utf-8'));
-
-          // remove stats.json file
-          fs.rmSync(statsJsonPath);
-          const stats = {
-            compilation: statsJson,
-            hasErrors: () => false,
-          };
-          const statsUtil = {
-            toJson: () => stats.compilation,
-          };
+          const statsUtil = getStats(outputPath);
           onBuildComplete?.(null, statsUtil);
           resolve({ stats: statsUtil, compiler: {} });
         })
@@ -82,18 +50,10 @@ class Bundler extends WebpackBundler {
   }
   setupDevServerOpts({ bundleConfigs }: { bundleConfigs: any }): any {
     const config = bundleConfigs[0];
-    // console.log(bundleConfigs);
-    // mako build need alias array
-    const generatorAlias = Object.keys(config.resolve.alias).map((key) => {
-      return [key, config.resolve.alias[key]];
-    });
-    // mako build need entry object
-    const generatorEntry: any = {};
-    Object.keys(config.entry).forEach((key) => {
-      generatorEntry[key] = config.entry[key][0];
-    });
+    const makoConfig = getMakoConfig(this.config, config);
+
     return {
-      onListening: async ({ server, port, hostname, listeningApp }: any) => {
+      onListening: async ({ port, hostname, listeningApp }: any) => {
         const hmrPort = port + 1;
         // proxy ws to mako server
         const wsProxy = createProxyMiddleware({
@@ -102,51 +62,46 @@ class Bundler extends WebpackBundler {
           ws: true,
           logLevel: 'silent',
         });
-        server.app.use('/__/hmr-ws', wsProxy);
-        // server.app._router.stack.unshift(server.app._router.stack.pop());
-        server.socketServer.on('upgrade', wsProxy.upgrade);
-
+        listeningApp.on('upgrade', wsProxy.upgrade);
         // mako dev
         const { build } = require('@umijs/mako');
-        const makoConfig: any = {
-          mode: config.mode,
-          devtool: false,
-          autoCSSModules: true,
-          less: {},
-          resolve: { alias: generatorAlias },
-          entry: generatorEntry,
-          // always enable stats to provide json for onBuildComplete hook
-          stats: {
-            modules: false,
-          },
-          plugins: [],
-          ...(this.config?.mako || {}),
-        };
         makoConfig.hmr = {};
-        makoConfig.devServer = { port: hmrPort, host: hostname };
+        makoConfig.plugins ??= [];
+        makoConfig.devServer = { port: port + 1, host: hostname };
         makoConfig.plugins.push({
           name: 'mako-dev',
           generateEnd: (args: any) => {
+            // const outputPath = path.resolve(
+            //   this.cwd,
+            //   this.config.outputPath || 'dist',
+            // );
+            // const statsUtil = getStats(outputPath);
+            // const compilation = statsUtil.toJson();
             // onDevCompileDone { startTime: 1720582011441, endTime: 1720582011804 }
-            // console.log('onDevCompileDone', args?.stats);
+            // console.log('onDevCompileDone', args);
+            // https://github.com/umijs/mako/issues/1134
             config.onCompileDone?.({
               ...args,
               stats: {
                 ...args?.stats,
+                // FIXME: 现在 mako dev 的时候缺失 css 的 chunks https://github.com/umijs/mako/issues/1134
+                // 修复后，compilation 从上面注释取得
                 compilation: {
-                  // FIXME: 现在 args stats，chunks 现在是写死的
                   chunks: [{ name: 'umi', files: ['umi.js', 'umi.css'] }],
                 },
+                // compilation,
               },
             });
+            if (args.isFirstCompile) {
+              const protocol = this.config.https ? 'https:' : 'http:';
+              const banner = getDevBanner(protocol, hostname, port);
+              console.log(banner);
+            }
           },
         });
-        // TODO: print banner
-        console.log(`http://localhost:${port}`);
-        const cwd = this.cwd;
         try {
           await build({
-            root: cwd,
+            root: this.cwd,
             config: makoConfig,
             watch: true,
           });
