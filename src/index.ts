@@ -20,7 +20,11 @@ export default function (api: IApi) {
     },
   });
   if (!api.userConfig.mako) return;
-  api.modifyConfig((memo) => {
+  if (api.userConfig.ssr) {
+    console.log('mako bundler no support ssr!');
+    return;
+  }
+  api.modifyConfig(async (memo) => {
     return {
       ...memo,
       mfsu: false,
@@ -74,7 +78,6 @@ export default function (api: IApi) {
       for (const { route, file } of routeMap) {
         const defaultContent = await html.getContent({
           route,
-          noChunk: true,
           assets: compilation.assets,
           chunks: compilation.chunks,
         });

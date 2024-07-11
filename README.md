@@ -61,7 +61,7 @@ MIT
 ## Example
 
 Please refer to [umi-antd-pro](https://github.com/alitajs/umi-antd-pro)'s [commit](https://github.com/alitajs/umi-antd-pro/commit/03103c82a78acbb1e27db46a26cbff2d77ff3d09) for usage cases
- 
+
 webpack
 
 ```bash
@@ -71,7 +71,7 @@ Theme generated successfully
 ✨  Done in 41.77s.
 ```
 
-mako 
+mako
 
 ```bash
 
