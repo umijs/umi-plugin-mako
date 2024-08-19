@@ -1,6 +1,5 @@
 import { Bundler as WebpackBundler } from '@umijs/bundler-webpack';
 import { createProxyMiddleware } from 'http-proxy-middleware';
-import path from 'path';
 import { getDevBanner, getMakoConfig, getStats } from './utils';
 
 class Bundler extends WebpackBundler {
@@ -28,18 +27,21 @@ class Bundler extends WebpackBundler {
       }
       const config = bundleConfigs[0];
       const makoConfig = getMakoConfig(this.config, config);
-
+      makoConfig.plugins ??= [];
+      let statsJson: any;
+      makoConfig.plugins.push({
+        name: 'mako-stats',
+        generateEnd: (args: any) => {
+          statsJson = args.stats;
+        },
+      });
       build({
         root: this.cwd,
         config: makoConfig,
         watch: false,
       })
         .then(() => {
-          const outputPath = path.resolve(
-            this.cwd,
-            this.config.outputPath || 'dist',
-          );
-          const statsUtil = getStats(outputPath);
+          const statsUtil = getStats(statsJson);
           onBuildComplete?.(null, statsUtil);
           resolve({ stats: statsUtil, compiler: {} });
         })
@@ -71,12 +73,9 @@ class Bundler extends WebpackBundler {
         makoConfig.plugins.push({
           name: 'mako-dev',
           generateEnd: (args: any) => {
-            const outputPath = path.resolve(
-              this.cwd,
-              this.config.outputPath || 'dist',
-            );
-            const statsUtil = getStats(outputPath);
+            const statsUtil = getStats(args.stats);
             const compilation = statsUtil.toJson();
+            // console.log(compilation);
             // onDevCompileDone { startTime: 1720582011441, endTime: 1720582011804 }
             // console.log('onDevCompileDone', args);
             config.onCompileDone?.({
@@ -86,7 +85,7 @@ class Bundler extends WebpackBundler {
                 compilation,
               },
             });
-            if (args.isFirstCompile) {
+            if (args.is_first_compile) {
               const protocol = this.config.https ? 'https:' : 'http:';
               const banner = getDevBanner(protocol, hostname, port);
               console.log(banner);
@@ -102,7 +101,6 @@ class Bundler extends WebpackBundler {
         } catch (e: any) {
           // opts.onBuildError?.(e);
           config.onCompileFail?.(e);
-
           console.error(e.message);
           const err: any = new Error('Build with mako failed.');
           err.stack = null;

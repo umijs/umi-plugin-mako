@@ -1,9 +1,16 @@
 import address from '@umijs/deps/compiled/address';
 import chalk from '@umijs/deps/compiled/chalk';
-import fs from 'fs';
 import lodash from 'lodash';
 import path from 'path';
 
+function getLessSourceMapConfig(devtool: any) {
+  return (
+    devtool && {
+      sourceMapFileInline: true,
+      outputSourceFiles: true,
+    }
+  );
+}
 export const getMakoConfig = (config: any, bundleConfig: any) => {
   const define: any = {};
   function normalizeDefineValue(val: string) {
@@ -40,12 +47,19 @@ export const getMakoConfig = (config: any, bundleConfig: any) => {
     generatorEntry[key] = bundleConfig.entry[key][0];
   });
 
+  const normalizedDevtool = config.devtool === false ? false : 'source-map';
+
   return {
     mode: bundleConfig.mode,
-    // FIXME: devtool 为 false 时 mako dev 的时候缺失 css 的 chunks https://github.com/umijs/mako/issues/1134
-    devtool: {},
+    devtool: config.devtool,
     autoCSSModules: true,
-    less: {},
+    less: {
+      modifyVars: config.lessLoader?.modifyVars || config.theme,
+      globalVars: config.lessLoader?.globalVars,
+      sourceMap: getLessSourceMapConfig(normalizedDevtool),
+      math: config.lessLoader?.math,
+      plugins: config.lessLoader?.plugins,
+    },
     resolve: { alias: generatorAlias },
     entry: generatorEntry,
     // always enable stats to provide json for onBuildComplete hook
@@ -53,17 +67,12 @@ export const getMakoConfig = (config: any, bundleConfig: any) => {
       modules: false,
     },
     define,
+    sass: config?.sass,
     ...(config?.mako || {}),
   };
 };
 
-export const getStats = (outputPath: string) => {
-  const statsJsonPath = path.join(outputPath, 'stats.json');
-  const statsJson = JSON.parse(fs.readFileSync(statsJsonPath, 'utf-8'));
-
-  // remove stats.json file
-  // fs.rmSync(statsJsonPath);
-
+export const getStats = (statsJson?: any) => {
   // 手动对标 chunks，主要是 @umijs/preset-built-in/lib/plugins/commands/htmlUtils.js 中用于生成 html
   const stats = {
     compilation: {
