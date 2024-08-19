@@ -5,6 +5,9 @@ export default defineConfig({
   nodeModulesTransform: {
     type: 'none',
   },
+  theme: {
+    'primary-color': '#00FF00',
+  },
   routes: [{ path: '/', component: '@/pages/index' }],
   fastRefresh: {},
   mfsu: false,
