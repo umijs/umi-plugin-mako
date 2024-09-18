@@ -85,7 +85,7 @@ class Bundler extends WebpackBundler {
                 compilation,
               },
             });
-            if (args.is_first_compile) {
+            if (args.isFirstCompile) {
               const protocol = this.config.https ? 'https:' : 'http:';
               const banner = getDevBanner(protocol, hostname, port);
               console.log(banner);
