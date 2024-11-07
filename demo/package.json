@@ -1,6 +1,7 @@
 {
   "private": true,
   "scripts": {
+    "dev": "umi dev",
     "start": "umi dev",
     "build": "umi build",
     "postinstall": "umi generate tmp",

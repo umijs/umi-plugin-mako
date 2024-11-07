@@ -1,6 +1,6 @@
 {
   "name": "umi-plugin-mako",
-  "version": "0.0.12",
+  "version": "0.0.13",
   "description": "",
   "keywords": [
     "mako",
@@ -23,7 +23,7 @@
   "dependencies": {
     "@umijs/bundler-webpack": "3.5.41",
     "@umijs/deps": "3.5.41",
-    "@umijs/mako": "0.8.15",
+    "@umijs/mako": "0.9.5",
     "@umijs/preset-built-in": "3.5.41",
     "@umijs/types": "3.x",
     "compression": "^1.7.4",
