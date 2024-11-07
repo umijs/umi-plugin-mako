@@ -75,7 +75,7 @@ class Bundler extends WebpackBundler {
           generateEnd: (args: any) => {
             const statsUtil = getStats(args.stats);
             const compilation = statsUtil.toJson();
-            // console.log(compilation);
+            // console.log(args.stats);
             // onDevCompileDone { startTime: 1720582011441, endTime: 1720582011804 }
             // console.log('onDevCompileDone', args);
             config.onCompileDone?.({
